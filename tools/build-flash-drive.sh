@@ -40,6 +40,9 @@ mkdir -p "$TARGET"
 VENDOR="$TARGET/vendor"
 mkdir -p "$VENDOR/ollama" "$VENDOR/models"
 
+# Record which model was bundled so the installers use it (not their default)
+echo "$MODEL" > "$VENDOR/model.txt"
+
 # ── 1. Copy repo (app + installers, no .git) ─────────────────
 echo ""
 echo "[1/3] Copying app and installers..."
@@ -60,12 +63,13 @@ if [[ ! -f "$VENDOR/ollama/Ollama-darwin.zip" ]]; then
     curl -fsSL "https://ollama.com/download/Ollama-darwin.zip" -o "$VENDOR/ollama/Ollama-darwin.zip"
 fi
 # Linux
-if [[ ! -f "$VENDOR/ollama/ollama-linux.tgz" ]]; then
+if [[ ! -x "$VENDOR/ollama/bin/ollama" ]]; then
     echo "  Linux..."
     curl -fsSL "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64.tgz" \
         -o "$VENDOR/ollama/ollama-linux.tgz"
-    mkdir -p "$VENDOR/ollama/bin"
-    tar -xzf "$VENDOR/ollama/ollama-linux.tgz" -C "$VENDOR/ollama/bin"
+    # The tarball contains bin/ollama — extract one level up so the
+    # installer finds it at vendor/ollama/bin/ollama
+    tar -xzf "$VENDOR/ollama/ollama-linux.tgz" -C "$VENDOR/ollama"
 fi
 
 # ── 3. Model (offline bundle) ────────────────────────────────
@@ -76,6 +80,7 @@ if ! command -v ollama &>/dev/null; then
     curl -fsSL https://ollama.com/install.sh | sh
 fi
 ollama serve &>/dev/null &
+SERVE_PID=$!
 sleep 3
 if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
     echo "  Pulling $MODEL (this downloads ~2GB)..."
@@ -84,6 +89,9 @@ fi
 echo "  Copying model store to drive..."
 OLLAMA_STORE="${OLLAMA_MODELS:-$HOME/.ollama/models}"
 rsync -a "$OLLAMA_STORE/" "$VENDOR/models/"
+
+# Stop the helper server we started on the build machine
+kill "$SERVE_PID" 2>/dev/null || true
 
 # ── Done ─────────────────────────────────────────────────────
 SIZE=$(du -sh "$TARGET" | cut -f1)

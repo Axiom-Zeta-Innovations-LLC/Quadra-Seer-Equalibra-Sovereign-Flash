@@ -6,7 +6,7 @@
 
 1. Plug in the flash drive.
 2. **Windows:** double-click `install.bat`. **Mac/Linux:** run `./install.sh`.
-3. Wait a few minutes (first run sets everything up).
+3. Wait 15–30 minutes on first run (it downloads Python/Node packages; unattended — walk away). Every launch after that is instant.
 4. Your browser opens to Quadra-Seer Sovereign. Done.
 
 Everything — the AI model, the app, your conversations — lives on your machine. Unplug the drive, keep your mind.
@@ -24,6 +24,10 @@ This repo contains the app source and the installers, but **not** the large bina
 ```
 
 The build script downloads Ollama for Windows/macOS/Linux, pulls the model, and assembles everything on the drive. One build, then the drive works offline forever.
+
+### Honest note on "offline"
+
+The offline bundle covers **Ollama + the AI model** — those never touch the internet on the target machine. The **Python and Node packages** (~1–2 GB, mostly torch) still download on first install, so the target machine needs internet *once* for step 3, or about 15–30 minutes of unattended setup. (Pre-building those environments onto the drive is possible — it would make installs fully offline and much faster — but the environments are OS-specific, so it means three separate builds. Say the word if you want that.)
 
 ### Without the offline bundle
 
