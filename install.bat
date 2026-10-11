@@ -48,11 +48,13 @@ if !ERRORLEVEL! NEQ 0 (
     pause
     exit /b 1
 )
-python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" >nul 2>nul
+python -c "import sys; sys.exit(0 if (3, 10) <= sys.version_info < (3, 13) else 1)" >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
     echo.
-    echo  ERROR: Python 3.10 or newer is required. Please upgrade Python
-    echo  from https://www.python.org/downloads/ and re-run this installer.
+    echo  ERROR: Python 3.10, 3.11, or 3.12 is required.
+    echo  Newer Pythons are not supported yet (torch 2.2 has no wheels for them).
+    echo  Install Python 3.12 from https://www.python.org/downloads/
+    echo  and re-run this installer.
     pause
     exit /b 1
 )

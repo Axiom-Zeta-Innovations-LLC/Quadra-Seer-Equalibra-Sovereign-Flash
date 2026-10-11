@@ -44,9 +44,10 @@ if ! command -v python3 &>/dev/null; then
     echo "    Linux: sudo apt install python3 python3-venv   (or your distro's equivalent)"
     exit 1
 fi
-if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'; then
+if ! python3 -c 'import sys; sys.exit(0 if (3, 10) <= sys.version_info < (3, 13) else 1)'; then
     echo ""
-    echo "  ERROR: Python 3.10+ is required (found $(python3 --version))."
+    echo "  ERROR: Python 3.10, 3.11, or 3.12 is required (found $(python3 --version))."
+    echo "  Newer Pythons are not supported yet (torch 2.2 has no wheels for them)."
     exit 1
 fi
 echo "  $(python3 --version) found."
