@@ -22,25 +22,25 @@ setlocal EnableDelayedExpansion
 title Quadra-Seer Sovereign - Flash Drive Installer
 
 set "DRIVE=%~dp0"
-set "APP_DIR=%DRIVE%app"
-set "VENDOR_DIR=%DRIVE%vendor"
+set "APP_DIR=!DRIVE!app"
+set "VENDOR_DIR=!DRIVE!vendor"
 set "MODEL=qwen2.5:3b"
-if exist "%VENDOR_DIR%\model.txt" set /p MODEL=<"%VENDOR_DIR%\model.txt"
+if exist "!VENDOR_DIR!\model.txt" set /p MODEL=<"!VENDOR_DIR!\model.txt"
 
 echo.
 echo  ============================================================
 echo   QUADRA-SEER SOVEREIGN - Flash Drive Installer
 echo  ============================================================
 echo.
-echo  Drive: %DRIVE%
-echo  Model: %MODEL%
+echo  Drive: !DRIVE!
+echo  Model: !MODEL!
 echo.
 
 :: ── Step 0: Prerequisites ───────────────────────────────────
 echo [0/4] Checking prerequisites...
 
 where python >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo  ERROR: Python 3.10 or newer is not installed.
     echo  Get it from https://www.python.org/downloads/ and re-run this installer.
@@ -49,7 +49,7 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo  ERROR: Python 3.10 or newer is required. Please upgrade Python
     echo  from https://www.python.org/downloads/ and re-run this installer.
@@ -60,7 +60,7 @@ for /f "tokens=2" %%v in ('python --version 2^>^&1') do set "PYVER=%%v"
 echo  Python %PYVER% found.
 
 where node >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo  ERROR: Node.js is not installed.
     echo  Get the LTS release from https://nodejs.org/ and re-run this installer.
@@ -78,14 +78,14 @@ echo [1/4] Checking for Ollama...
 :: shells), so also check Ollama's default install location directly.
 set "OLLAMA_OK="
 where ollama >nul 2>nul
-if %ERRORLEVEL% EQU 0 set "OLLAMA_OK=1"
+if !ERRORLEVEL! EQU 0 set "OLLAMA_OK=1"
 if not defined OLLAMA_OK if exist "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" (
     set "PATH=%LOCALAPPDATA%\Programs\Ollama;%PATH%"
     set "OLLAMA_OK=1"
 )
 
 if not defined OLLAMA_OK (
-    if exist "%VENDOR_DIR%\ollama\OllamaSetup.exe" (
+    if exist "!VENDOR_DIR!\ollama\OllamaSetup.exe" (
         call :install_ollama_offline
     ) else (
         call :install_ollama_online
@@ -95,7 +95,7 @@ if not defined OLLAMA_OK (
         set "PATH=%LOCALAPPDATA%\Programs\Ollama;%PATH%"
     )
     where ollama >nul 2>nul
-    if %ERRORLEVEL% NEQ 0 (
+    if !ERRORLEVEL! NEQ 0 (
         echo.
         echo  ERROR: Ollama installation failed. Please install manually from
         echo  https://ollama.com/download and re-run this installer.
@@ -109,17 +109,17 @@ if not defined OLLAMA_OK (
 
 :: ── Step 2: Model ───────────────────────────────────────────
 echo.
-echo [2/4] Checking for AI model (%MODEL%)...
+echo [2/4] Checking for AI model (!MODEL!)...
 
 :: If the drive has a bundled model store, run our own Ollama server
 :: pointed at it. The Ollama tray app's background server would NOT see
 :: OLLAMA_MODELS set in this window, so we stop it and serve from here.
-if exist "%VENDOR_DIR%\models\manifests" (
+if exist "!VENDOR_DIR!\models\manifests" (
     echo  Using model bundled on flash drive (offline)...
     taskkill /F /IM ollama.exe >nul 2>nul
     taskkill /F /IM "ollama app.exe" >nul 2>nul
     timeout /t 2 /nobreak >nul
-    set "OLLAMA_MODELS=%VENDOR_DIR%\models"
+    set "OLLAMA_MODELS=!VENDOR_DIR!\models"
     start "Ollama Server" /min ollama serve
 )
 
@@ -128,7 +128,7 @@ if exist "%VENDOR_DIR%\models\manifests" (
 set "POLL=0"
 :wait_ollama_up
 ollama list >nul 2>nul
-if %ERRORLEVEL% EQU 0 goto :ollama_up
+if !ERRORLEVEL! EQU 0 goto :ollama_up
 if %POLL% EQU 3 (
     echo  No Ollama server responding - starting one...
     start "Ollama Server" /min ollama serve
@@ -145,15 +145,15 @@ timeout /t 5 /nobreak >nul
 goto :wait_ollama_up
 :ollama_up
 
-ollama list 2>nul | findstr /C:"%MODEL%" >nul
-if %ERRORLEVEL% EQU 0 (
+ollama list 2>nul | findstr /C:"!MODEL!" >nul
+if !ERRORLEVEL! EQU 0 (
     echo  Model already available.
     goto :model_done
 )
 
-echo  Pulling model %MODEL% (internet required, one time)...
-ollama pull %MODEL%
-if %ERRORLEVEL% NEQ 0 (
+echo  Pulling model !MODEL! (internet required, one time)...
+ollama pull !MODEL!
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo  ERROR: Could not load the model. Check your internet connection
     echo  or make sure the flash drive has the bundled model.
@@ -165,7 +165,7 @@ if %ERRORLEVEL% NEQ 0 (
 :: ── Step 3: App dependencies ─────────────────────────────────
 echo.
 echo [3/4] Setting up Quadra-Seer (this is the long step on first run)...
-cd /d "%APP_DIR%"
+cd /d "!APP_DIR!"
 
 if not exist ".venv" (
     echo  Creating Python environment...
@@ -220,7 +220,7 @@ echo  Installing Ollama from flash drive (offline)...
 :: Inno Setup silent flags. NOTE: the installer launches the Ollama tray
 :: app and may never exit on its own, so we poll for ollama.exe on disk
 :: instead of waiting on the setup process.
-start "" "%VENDOR_DIR%\ollama\OllamaSetup.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
+start "" "!VENDOR_DIR!\ollama\OllamaSetup.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
 set "POLL=0"
 :wait_ollama_exe
 if exist "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" goto :ollama_exe_found
@@ -241,7 +241,7 @@ goto :eof
 echo  Ollama not found. Downloading installer (internet required)...
 set "INSTALLER=%TEMP%\OllamaSetup.exe"
 powershell -NoProfile -UseBasicParsing -Command "Invoke-WebRequest -Uri 'https://ollama.com/download/OllamaSetup.exe' -OutFile $env:INSTALLER"
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo  ERROR: Could not download the Ollama installer. Check your
     echo  internet connection and re-run.
@@ -249,7 +249,7 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 echo  Running Ollama installer...
-start "" "%INSTALLER%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
+start "" "!INSTALLER!" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
 set "POLL=0"
 :wait_ollama_exe2
 if exist "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" goto :ollama_exe_found2
