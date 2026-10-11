@@ -1,11 +1,11 @@
-@echo off
+﻿@echo off
 :: ============================================================
-::  Quadra-Seer Sovereign — Flash Drive Installer (Windows)
+::  Quadra-Seer Sovereign - Flash Drive Installer (Windows)
 ::
 ::  Plug in the flash drive, double-click this file. That's it.
 ::
 ::  First run takes 15-30 minutes (mostly downloading Python and
-::  Node packages). It runs unattended — walk away and come back.
+::  Node packages). It runs unattended - walk away and come back.
 ::  Every launch after that is instant.
 ::
 ::  What it does:
@@ -19,7 +19,7 @@
 :: ============================================================
 setlocal EnableDelayedExpansion
 
-title Quadra-Seer Sovereign — Flash Drive Installer
+title Quadra-Seer Sovereign - Flash Drive Installer
 
 set "DRIVE=%~dp0"
 set "APP_DIR=%DRIVE%app"
@@ -29,7 +29,7 @@ if exist "%VENDOR_DIR%\model.txt" set /p MODEL=<"%VENDOR_DIR%\model.txt"
 
 echo.
 echo  ============================================================
-echo   QUADRA-SEER SOVEREIGN — Flash Drive Installer
+echo   QUADRA-SEER SOVEREIGN - Flash Drive Installer
 echo  ============================================================
 echo.
 echo  Drive: %DRIVE%
@@ -182,7 +182,7 @@ if not exist "node_modules" (
 )
 
 :: ── Step 4: Launch ──────────────────────────────────────────
-:: (cd first so the child windows inherit the folder — avoids fragile
+:: (cd first so the child windows inherit the folder - avoids fragile
 :: nested quoting when the drive path contains spaces.)
 echo.
 echo [4/4] Launching Quadra-Seer Sovereign...
