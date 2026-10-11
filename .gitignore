@@ -1,0 +1,9 @@
+# Large binaries live here after running tools/build-flash-drive.sh.
+# They are NOT committed to git — download them at build time.
+vendor/
+*.exe
+*.dmg
+*.tgz
+*.zip
+.venv/
+node_modules/
