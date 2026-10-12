@@ -74,7 +74,7 @@ fi
 
 # ── 3. Model (offline bundle) ────────────────────────────────
 echo ""
-echo "[3/3] Bundling AI model ($MODEL)..."
+echo "[3/4] Bundling AI model ($MODEL)..."
 if ! command -v ollama &>/dev/null; then
     echo "  Ollama not found on this machine — installing temporarily..."
     curl -fsSL https://ollama.com/install.sh | sh
@@ -92,6 +92,19 @@ rsync -a "$OLLAMA_STORE/" "$VENDOR/models/"
 
 # Stop the helper server we started on the build machine
 kill "$SERVE_PID" 2>/dev/null || true
+
+# ── 4. Sentinel (drift detection) ─────────────────────────────
+echo ""
+echo "[4/4] Bundling Sentinel..."
+SENTINEL_SRC="${SENTINEL_SRC:-}"
+if [ -n "$SENTINEL_SRC" ] && [ -d "$SENTINEL_SRC" ]; then
+    echo "  Copying Sentinel from $SENTINEL_SRC..."
+    rsync -a --exclude='.git' --exclude='.venv' --exclude='__pycache__' "$SENTINEL_SRC/" "$TARGET/sentinel/"
+    echo "  Sentinel bundled."
+else
+    echo "  SENTINEL_SRC not set — skipping Sentinel bundle."
+    echo "  Set SENTINEL_SRC=/path/to/axiom-zeta-sentinel-sovereign to include it."
+fi
 
 # ── Done ─────────────────────────────────────────────────────
 SIZE=$(du -sh "$TARGET" | cut -f1)

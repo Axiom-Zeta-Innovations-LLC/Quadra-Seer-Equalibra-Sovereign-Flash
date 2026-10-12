@@ -13,7 +13,8 @@
 ::    1. Installs Ollama (from the drive if bundled, or downloads it)
 ::    2. Loads the AI model (from the drive if bundled, or pulls it)
 ::    3. Sets up Python + Node dependencies
-::    4. Launches Quadra-Seer Sovereign in your browser
+::    4. Sets up Sentinel (drift detection, if bundled on the drive)
+::    5. Launches Quadra-Seer Sovereign in your browser
 ::
 ::  Everything runs on YOUR machine. No cloud. No account.
 :: ============================================================
@@ -37,7 +38,7 @@ echo  Model: !MODEL!
 echo.
 
 :: ── Step 0: Prerequisites ───────────────────────────────────
-echo [0/4] Checking prerequisites...
+echo [0/5] Checking prerequisites...
 
 where python >nul 2>nul
 if !ERRORLEVEL! NEQ 0 (
@@ -74,7 +75,7 @@ echo  Node.js %NODEVER% found.
 
 :: ── Step 1: Ollama ──────────────────────────────────────────
 echo.
-echo [1/4] Checking for Ollama...
+echo [1/5] Checking for Ollama...
 
 :: where.exe can miss a fresh install (PATH only refreshes in new
 :: shells), so also check Ollama's default install location directly.
@@ -111,7 +112,7 @@ if not defined OLLAMA_OK (
 
 :: ── Step 2: Model ───────────────────────────────────────────
 echo.
-echo [2/4] Checking for AI model (!MODEL!)...
+echo [2/5] Checking for AI model (!MODEL!)...
 
 :: If the drive has a bundled model store, run our own Ollama server
 :: pointed at it. The Ollama tray app's background server would NOT see
@@ -166,7 +167,7 @@ if !ERRORLEVEL! NEQ 0 (
 
 :: ── Step 3: App dependencies ─────────────────────────────────
 echo.
-echo [3/4] Setting up Quadra-Seer (this is the long step on first run)...
+echo [3/5] Setting up Quadra-Seer (this is the long step on first run)...
 cd /d "!APP_DIR!"
 
 if not exist ".venv" (
@@ -183,11 +184,43 @@ if not exist "node_modules" (
     call npm install
 )
 
-:: ── Step 4: Launch ──────────────────────────────────────────
+:: ── Step 4: Sentinel ────────────────────────────────────────
+echo.
+echo [4/5] Setting up Sentinel (drift detection)...
+set "SENTINEL_DIR=!DRIVE!sentinel"
+if not exist "!SENTINEL_DIR!" (
+    echo  Sentinel not found on drive - skipping (Sovereign will run without drift detection).
+    echo  To enable: place the Sentinel source in the 'sentinel' folder on this drive.
+) else (
+    cd /d "!SENTINEL_DIR!"
+    if not exist ".venv" (
+        echo  Creating Sentinel Python environment...
+        python -m venv .venv
+    )
+    call .venv\Scripts\activate.bat
+    echo  Installing Sentinel dependencies...
+    pip install -q -r requirements.txt 2>nul
+    pip install -q fastapi uvicorn requests 2>nul
+    cd /d "!APP_DIR!"
+    call .venv\Scripts\activate.bat
+    echo  Sentinel ready.
+)
+
+:: ── Step 5: Launch ──────────────────────────────────────────
 :: (cd first so the child windows inherit the folder - avoids fragile
 :: nested quoting when the drive path contains spaces.)
 echo.
-echo [4/4] Launching Quadra-Seer Sovereign...
+echo [5/5] Launching Quadra-Seer Sovereign...
+echo.
+echo  ============================================================
+echo   Starting Sentinel gateway (port 8000)...
+echo  ============================================================
+if exist "!DRIVE!sentinel" (
+    start "Sentinel Gateway" cmd /k "cd /d \"!DRIVE!sentinel\" && .venv\Scripts\activate.bat && python -m uvicorn gateway.main:app --host 127.0.0.1 --port 8000"
+    timeout /t 5 /nobreak >nul
+) else (
+    echo  (Skipped - Sentinel not on drive)
+)
 echo.
 echo  ============================================================
 echo   Starting backend (port 5001)...
