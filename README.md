@@ -49,7 +49,3 @@ If you skip the build step and just copy this repo to a drive, the installers st
 - **RAM:** ~4GB free (3B model) or ~8GB free (7B model)
 - **Disk:** ~1GB for the app + dependencies (model stays on the drive or copies over)
 - **Python 3.10+** and **Node.js 22+** (the installer will tell you if they're missing)
-
-## License
-
-AGPL-3.0 — same as the main repo. The software is free; the flash drive is just a convenient way to carry it.
